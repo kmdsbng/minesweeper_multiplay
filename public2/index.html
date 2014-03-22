@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Minesweeper Multi Play</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<link rel="stylesheet" href="css/minesweeper.css" type="text/css" />
+<link rel="stylesheet" href="css/smoothness/jquery-ui-1.9.2.custom.min.css" type="text/css" />
+</head>
+<body>
+  <h1 class="logo">
+    MineSweeper Multi Play
+  </h1>
+  <div id="minesweeper"></div>
+
+  <script type="text/javascript">
+    var FayeClient;
+    $.getScript("//" + document.location.hostname + ":11001/faye/client.js", function() {
+      FayeClient = new Faye.Client('//' + document.location.hostname + ':11001/faye');
+      $.getScript("js/MineSweeper.js", function() {
+
+        var subscription = FayeClient.subscribe('/foo', function(state) {
+
+          console.log('received:', state);
+          // handle message
+          if (state.type === 'board_init') {
+            var mine_hat = state.mine_hat;
+            if (mine_hat.join() === minesweeper.mine_hat.join()) {
+              // ignore
+              return;
+            }
+            minesweeper.clearBoard(mine_hat);
+            minesweeper.redrawBoard();
+            minesweeper.running = true;
+          } else if (state.type === 'tell_me_grid') {
+            var mine_hat = state.mine_hat;
+            if (mine_hat.join() === minesweeper.mine_hat.join()) {
+              // ignore
+              return;
+            }
+            minesweeper.sendGrid();
+
+          } else if (state.type === 'grid') {
+            var mine_hat = state.mine_hat;
+            if (mine_hat.join() === minesweeper.mine_hat.join()) {
+              // ignore
+              return;
+            }
+            minesweeper.grid = state.grid;
+            minesweeper.redrawBoard();
+
+          } else if (state.type === 'touch_adjacent') {
+            state.grid = minesweeper.grid;
+            minesweeper.worker.postMessage(JSON.stringify(state));
+          } else if (state.type === 'game_over') {
+            var cell = minesweeper.board.find('.cell[data-coord="' + [state.x,state.y].join(',') + '"]');
+            minesweeper.gameOver(cell);
+          } else if (state.type === 'set_sub_state') {
+            minesweeper.setSubState(state.x, state.y, state.state);
+          }
+        });
+
+      });
+    });
+  </script>
+
+</body>
+</html>

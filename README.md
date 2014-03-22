@@ -7,12 +7,12 @@ Setup:
 Run faye server
 
 ```bash
-rackup faye.ru -s thin -E production
+rackup faye.ru -s thin -E production -p 11001
 ```
 
 And put publish the public directory.
 
-If need, rewrite host and port number in index.html and faye.ru.
+If need, rewrite host and port number in index.html .
 
 Have fun!
 
